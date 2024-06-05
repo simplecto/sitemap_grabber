@@ -1,3 +1,5 @@
+"""The single sitemap_grabber module."""
+
 import requests
 from defusedxml.ElementTree import fromstring
 from fake_useragent import UserAgent
