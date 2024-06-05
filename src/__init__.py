@@ -1,4 +1,4 @@
-"""The single sitemap_grabber module."""
+"""Init file for the sitemap_grabber package."""
 
 from .sitemap_grabber import get_all_urls
 
