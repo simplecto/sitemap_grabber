@@ -9,7 +9,6 @@ license = {file = "LICENSE"}
 version = "0.1.0"
 description = "A simple sitemap grabber"
 classifiers = ["License :: OSI Approved :: MIT License"]
-dynamic = ["version", "description"]
 dependencies = [
   "requests",
   "fake-useragent",
