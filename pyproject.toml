@@ -18,6 +18,9 @@ dependencies = [
 [project.urls]
 Home = "https://simplecto.com"
 
+[tool.flit.metadata]
+module = "sitemap_grabber"
+
 [tool.ruff]
 # Set the maximum line length to 79.
 line-length = 79
