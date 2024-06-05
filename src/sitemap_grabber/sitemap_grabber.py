@@ -1,18 +1,14 @@
 import requests
 from defusedxml.ElementTree import fromstring
+from fake_useragent import UserAgent
 
-
-UA = {
-    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 "
-    "Safari/537.36"
-}
 
 TIMEOUT = 30
 
 
 def remove_from_list(lst: list[str], blacklist: list[str]) -> list[str]:
     """
-    Remove any strings from a list that contain any of the strings in a blacklist
+    Remove any strings from a list that contain any found in blacklist
 
     :param lst:
     :param blacklist:
@@ -28,11 +24,12 @@ def get_sitemap_urls_from_robots_txt(
     Get a list of sitemap urls from a domain's robots.txt file
 
     :param domain: The domain to get the sitemap urls from
-    :param blacklist: Optional list of strings to blacklist from the sitemap urls
+    :param blacklist: Optional list of strings to blacklist from sitemap urls
     :return: List of sitemap urls
     """
     robots_url = f"https://{domain}/robots.txt"
-    response = requests.get(robots_url, headers=UA, timeout=TIMEOUT)
+    useragent = {"User-Agent": UserAgent().random}
+    response = requests.get(robots_url, headers=useragent, timeout=TIMEOUT)
 
     sitemap_urls = []
     for line in response.text.split("\n"):
@@ -52,7 +49,8 @@ def get_urls_from_sitemap(sitemap_url: str) -> list[str]:
     :param sitemap_url: The sitemap url to get the urls from
     :return: List of urls
     """
-    response = requests.get(sitemap_url, headers=UA, timeout=TIMEOUT)
+    useragent = {"User-Agent": UserAgent().random}
+    response = requests.get(sitemap_url, headers=useragent, timeout=TIMEOUT)
     root = fromstring(response.content)
     urls = [child[0].text for child in root]
 
@@ -82,4 +80,4 @@ def get_all_urls(domain: str) -> list[str]:
 
 # Example usage
 # urls = get_all_urls("cypherhunter.com")
-# blacklist = ['/es/', '/zh-hans/', '/zh-hant/', '/zh-hans-bk/', '/zh-hans-bk/']
+# blacklist = ['/es/', '/zh-hans/', '/zh-hans-bk/']
