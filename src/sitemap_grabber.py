@@ -84,3 +84,5 @@ def get_all_urls(domain: str) -> list[str]:
 # Example usage
 # urls = get_all_urls("cypherhunter.com")
 # blacklist = ['/es/', '/zh-hans/', '/zh-hans-bk/']
+
+__all__ = ["get_all_urls", "__version__"]
