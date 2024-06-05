@@ -4,6 +4,7 @@ import requests
 from defusedxml.ElementTree import fromstring
 from fake_useragent import UserAgent
 
+__version__ = "0.1.0"
 
 TIMEOUT = 30
 
