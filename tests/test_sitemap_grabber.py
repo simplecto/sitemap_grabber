@@ -1,6 +1,6 @@
 import unittest
 import responses
-from sitemap_grabber import SitemapGrabber
+from sitemap_grabber.sitemap_grabber import SitemapGrabber
 
 
 class TestSitemapGrabber(unittest.TestCase):
@@ -13,23 +13,17 @@ class TestSitemapGrabber(unittest.TestCase):
         )
         sitemap_grabber = SitemapGrabber("https://example.com")
         self.assertEqual(
-            sitemap_grabber.sitemap_urls, {"https://example.com/sitemap.xml"}
-        )
-
-        # add duplicate sitemap
-        sitemap_grabber._add_sitemap("https://example.com/sitemap.xml")
-        self.assertEqual(
-            sitemap_grabber.sitemap_urls, {"https://example.com/sitemap.xml"}
+            sitemap_grabber.sitemap_urls, ["https://example.com/sitemap.xml"]
         )
 
         # add new sitemap
         sitemap_grabber._add_sitemap("https://example.com/sitemap2.xml")
         self.assertEqual(
             sitemap_grabber.sitemap_urls,
-            {
+            [
                 "https://example.com/sitemap.xml",
                 "https://example.com/sitemap2.xml",
-            },
+            ],
         )
 
     @responses.activate

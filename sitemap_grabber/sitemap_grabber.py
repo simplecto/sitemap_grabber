@@ -22,13 +22,13 @@ class SitemapGrabber(object):
         self.blacklist_patterns = blacklist_patterns
 
         self.sitemaps_crawled = set()
-        self.sitemap_urls = set()
+        self.sitemap_urls = []
 
         self._extract_sitemaps_from_robots_txt()
 
     def _add_sitemap(self, url: str):
         if url.lower() not in self.sitemaps_crawled:
-            self.sitemap_urls.add(url)
+            self.sitemap_urls.append(url)
 
         self.sitemaps_crawled.add(url.lower())
 
@@ -43,7 +43,7 @@ class SitemapGrabber(object):
             # regex case-insensitive match
             if re.match(r"^sitemap:.*", line, re.IGNORECASE):
                 url = line.split(": ")[1].strip()
-                self.sitemap_urls.add(url)
+                self.sitemap_urls.append(url)
 
     def get_all_sitemaps(self):
         """
@@ -52,6 +52,10 @@ class SitemapGrabber(object):
         """
         for sitemap_url in self.sitemap_urls:
             self._recursive_get_sitemaps(sitemap_url)
+
+        # deduplicate the list and sort it
+        self.sitemap_urls = list(set(self.sitemap_urls))
+        self.sitemap_urls.sort()
 
     @staticmethod
     def _process_sitemap_content(
