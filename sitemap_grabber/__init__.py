@@ -1,83 +1,104 @@
+import html
+import logging
+import re
+import xml.etree.ElementTree  # nosec B405
+
 import requests
 from defusedxml.ElementTree import fromstring
 from fake_useragent import UserAgent
+from urllib.parse import urljoin
+from .well_known_files import WellKnownFiles
 
+
+logger = logging.getLogger(__name__)
 
 TIMEOUT = 30
 
 
-def remove_from_list(lst: list[str], blacklist: list[str]) -> list[str]:
-    """
-    Remove any strings from a list that contain any found in blacklist
+class SitemapGrabber(object):
+    def __init__(self, website_url: str, blacklist_patterns: list[str] = None):
+        self.well_known_files = WellKnownFiles(website_url)
+        self.website_url = self.well_known_files.website_url
+        self.blacklist_patterns = blacklist_patterns
 
-    :param lst:
-    :param blacklist:
-    :return: a list with the strings removed
-    """
-    return [s for s in lst if not any(bs in s for bs in blacklist)]
+        self.sitemaps_crawled = set()
+        self.sitemap_urls = set()
 
+        self._extract_sitemaps_from_robots_txt()
 
-def get_sitemap_urls_from_robots_txt(
-    domain: str, blacklist: list[str] = None
-) -> list[str]:
-    """
-    Get a list of sitemap urls from a domain's robots.txt file
+    def _add_sitemap(self, url: str):
+        if url.lower() not in self.sitemaps_crawled:
+            self.sitemap_urls.add(url)
 
-    :param domain: The domain to get the sitemap urls from
-    :param blacklist: Optional list of strings to blacklist from sitemap urls
-    :return: List of sitemap urls
-    """
-    robots_url = f"https://{domain}/robots.txt"
-    useragent = {"User-Agent": UserAgent().random}
-    response = requests.get(robots_url, headers=useragent, timeout=TIMEOUT)
+        self.sitemaps_crawled.add(url.lower())
 
-    sitemap_urls = []
-    for line in response.text.split("\n"):
-        if line.startswith("Sitemap:"):
-            sitemap_urls.append(line.replace("Sitemap: ", "").strip())
+    def _extract_sitemaps_from_robots_txt(self):
+        """
+        Extracts the sitemap urls from the robots.txt file
+        :return:
+        """
+        robots_txt = self.well_known_files.fetch("robots.txt")
 
-    if blacklist:
-        sitemap_urls = remove_from_list(sitemap_urls, blacklist)
+        for line in robots_txt.split("\n"):
+            # regex case-insensitive match
+            if re.match(r"^sitemap:.*", line, re.IGNORECASE):
+                url = line.split(": ")[1].strip()
+                self.sitemap_urls.add(url)
 
-    return sitemap_urls
+    def get_all_sitemaps(self):
+        """
+        Get all sitemaps from the website
+        :return:
+        """
+        for sitemap_url in self.sitemap_urls:
+            self._recursive_get_sitemaps(sitemap_url)
 
+    @staticmethod
+    def _process_sitemap_content(
+        content: str,
+    ) -> xml.etree.ElementTree.Element:
+        try:
+            root = fromstring(content)
+        except xml.etree.ElementTree.ParseError as e:
+            logger.error("Error parsing sitemap: %s", e)
+            unescaped_content = html.unescape(content)
+            root = fromstring(unescaped_content)
 
-def get_urls_from_sitemap(sitemap_url: str) -> list[str]:
-    """
-    Get a list of urls from a sitemap url
+        return root
 
-    :param sitemap_url: The sitemap url to get the urls from
-    :return: List of urls
-    """
-    useragent = {"User-Agent": UserAgent().random}
-    response = requests.get(sitemap_url, headers=useragent, timeout=TIMEOUT)
-    root = fromstring(response.content)
-    urls = [child[0].text for child in root]
+    def _recursive_get_sitemaps(self, sitemap_url: str):
+        """
+        Given a list of sitemap URLs, get all sitemaps recursively
+        :param sitemap_url:
+        :return:
+        """
+        if sitemap_url.lower() in self.sitemaps_crawled:
+            logging.debug("Sitemap already seen: %s", sitemap_url)
+            return None
 
-    for child in root:
-        if child.tag.endswith("sitemap") or child.tag.endswith("urlset"):
-            urls += get_urls_from_sitemap(child[0].text)
+        logging.debug("Getting sitemap: %s", sitemap_url)
+        response = requests.get(
+            sitemap_url, headers={"User-Agent": UserAgent().random}, timeout=30
+        )
 
-    return urls
+        # test that it was a good response
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            logging.error("Error fetching: %s", sitemap_url)
+            logging.error("Response: %s", e)
+            return None
 
+        logging.debug("Adding sitemap: %s", sitemap_url)
+        self._add_sitemap(sitemap_url)
 
-def get_all_urls(domain: str) -> list[str]:
-    """
-    Get all urls from a domain
+        # parse the sitemap
+        root = self._process_sitemap_content(response.content.decode("utf-8"))
 
-    :param domain: The domain to get the urls from
-    :return: List of urls
-    """
-    sitemap_urls = get_sitemap_urls_from_robots_txt(domain)
-
-    urls = []
-
-    for sitemap_url in sitemap_urls:
-        urls += get_urls_from_sitemap(sitemap_url)
-
-    return urls
-
-
-# Example usage
-# urls = get_all_urls("cypherhunter.com")
-# blacklist = ['/es/', '/zh-hans/', '/zh-hans-bk/']
+        for child in root:
+            if child.tag.endswith("sitemap"):
+                loc = child[0].text.strip()
+                # Resolve relative URLs
+                loc = urljoin(sitemap_url, loc)
+                logging.debug("Found sitemap: %s", loc)
+                self._recursive_get_sitemaps(loc)
