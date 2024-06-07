@@ -16,6 +16,13 @@ TIMEOUT = 30
 
 
 class SitemapGrabber(object):
+    COMMON_SITEMAP_LOCATIONS = [
+        "/sitemap.xml",
+        "/sitemap_index.xml",
+        "/sitemap/sitemap.xml",
+        "/sitemap/sitemap_index.xml",
+    ]
+
     def __init__(self, website_url: str, blacklist_patterns: list[str] = None):
         self.well_known_files = WellKnownFiles(website_url)
         self.website_url = self.well_known_files.website_url
@@ -44,6 +51,45 @@ class SitemapGrabber(object):
             if re.match(r"^sitemap:.*", line, re.IGNORECASE):
                 url = line.split(": ")[1].strip()
                 self.sitemap_urls.append(url)
+
+        if len(self.sitemap_urls) == 0:
+            logger.info("No sitemaps found in robots.txt.")
+            self._check_common_sitemap_locations()
+
+    def _check_common_sitemap_locations(self):
+        """
+        Check the common sitemap locations. Add any valid ones to the list.
+        :return:
+        """
+        logger.info("Trying default sitemap locations:")
+        for location in self.COMMON_SITEMAP_LOCATIONS:
+            url = urljoin(self.website_url, location)
+            if self._is_sitemap(url):
+                self.sitemap_urls.append(url)
+
+    @staticmethod
+    def _is_sitemap(url: str):
+        """
+        Check if the URL is a sitemap
+        :param url:
+        :return:
+        """
+        ua = {"User-Agent": UserAgent().random}
+        response = requests.get(url, headers=ua, timeout=TIMEOUT)
+
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            logger.debug("Error fetching: %s", url)
+            logger.debug("Response: %s", e)
+            return False
+
+        content = response.content.decode("utf-8")
+
+        if not content.startswith("<?xml"):
+            return False
+
+        return True
 
     def get_all_sitemaps(self):
         """
