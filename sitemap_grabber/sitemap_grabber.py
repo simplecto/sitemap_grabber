@@ -106,3 +106,8 @@ class SitemapGrabber(object):
                 loc = urljoin(sitemap_url, loc)
                 logging.debug("Found sitemap: %s", loc)
                 self._recursive_get_sitemaps(loc)
+            elif child.tag.endswith("sitemapindex"):
+                for sitemap in child:
+                    loc = sitemap[0].text.strip()
+                    loc = urljoin(sitemap_url, loc)
+                    self._recursive_get_sitemaps(loc)
