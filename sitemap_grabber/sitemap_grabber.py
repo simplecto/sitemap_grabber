@@ -31,8 +31,6 @@ class SitemapGrabber(object):
         self.sitemaps_crawled = set()
         self.sitemap_urls = []
 
-        self._extract_sitemaps_from_robots_txt()
-
     def _add_sitemap(self, url: str):
         if url.lower() not in self.sitemaps_crawled:
             self.sitemap_urls.append(url)
@@ -64,16 +62,13 @@ class SitemapGrabber(object):
         logger.info("Trying default sitemap locations:")
         for location in self.COMMON_SITEMAP_LOCATIONS:
             url = urljoin(self.website_url, location)
-            if self._is_sitemap(url):
+            content = self._fetch_url(url)
+
+            if self._is_sitemap(content):
                 self.sitemap_urls.append(url)
 
     @staticmethod
-    def _is_sitemap(url: str):
-        """
-        Check if the URL is a sitemap
-        :param url:
-        :return:
-        """
+    def _fetch_url(url: str):
         ua = {"User-Agent": UserAgent().random}
         response = requests.get(url, headers=ua, timeout=TIMEOUT)
 
@@ -84,7 +79,18 @@ class SitemapGrabber(object):
             logger.debug("Response: %s", e)
             return False
 
-        content = response.content.decode("utf-8")
+        return response.content.decode("utf-8")
+
+    @staticmethod
+    def _is_sitemap(content: str = None) -> bool:
+        """
+        Check if the URL is a sitemap
+        :param content:
+        :return:
+        """
+
+        if not content:
+            return False
 
         if not content.startswith("<?xml"):
             return False
@@ -96,6 +102,8 @@ class SitemapGrabber(object):
         Get all sitemaps from the website
         :return:
         """
+        self._extract_sitemaps_from_robots_txt()
+
         for sitemap_url in self.sitemap_urls:
             self._recursive_get_sitemaps(sitemap_url)
 
@@ -127,23 +135,19 @@ class SitemapGrabber(object):
             return None
 
         logging.debug("Getting sitemap: %s", sitemap_url)
-        response = requests.get(
-            sitemap_url, headers={"User-Agent": UserAgent().random}, timeout=30
-        )
 
-        # test that it was a good response
-        try:
-            response.raise_for_status()
-        except requests.HTTPError as e:
-            logging.error("Error fetching: %s", sitemap_url)
-            logging.error("Response: %s", e)
+        content = self._fetch_url(sitemap_url)
+
+        # check if it is a sitemap
+        if not self._is_sitemap(content):
+            logging.warning("Not a sitemap: %s", sitemap_url)
             return None
 
         logging.debug("Adding sitemap: %s", sitemap_url)
         self._add_sitemap(sitemap_url)
 
         # parse the sitemap
-        root = self._process_sitemap_content(response.content.decode("utf-8"))
+        root = self._process_sitemap_content(content)
 
         for child in root:
             if child.tag.endswith("sitemap"):
