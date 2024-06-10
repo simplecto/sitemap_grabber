@@ -12,7 +12,8 @@ classifiers = ["License :: OSI Approved :: MIT License"]
 dependencies = [
   "requests",
   "fake-useragent",
-  "defusedxml"
+  "defusedxml",
+  "cloudscraper"
 ]
 
 [project.urls]
