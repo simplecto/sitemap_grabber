@@ -2,6 +2,7 @@ import logging
 from urllib.parse import urlparse
 
 import requests
+import cloudscraper
 from fake_useragent import UserAgent
 
 logger = logging.getLogger(__name__)
@@ -54,9 +55,13 @@ class WellKnownFiles(object):
     def _get_response(self, url):
         try:
             logger.debug("Fetching: %s", url)
-            response = requests.get(
-                url, headers=self.request_headers, timeout=TIMEOUT
-            )
+            # response = requests.get(
+            #     url, headers=self.request_headers, timeout=TIMEOUT
+            # )
+
+            scraper = cloudscraper.create_scraper()
+            response = scraper.get(url, timeout=TIMEOUT)
+
             response.raise_for_status()
         except requests.HTTPError as e:
             logger.error("Error fetching: %s", url)

@@ -4,8 +4,8 @@ import re
 import xml.etree.ElementTree  # nosec B405
 
 import requests
+import cloudscraper
 from defusedxml.ElementTree import fromstring
-from fake_useragent import UserAgent
 from urllib.parse import urljoin
 from .well_known_files import WellKnownFiles
 
@@ -69,8 +69,11 @@ class SitemapGrabber(object):
 
     @staticmethod
     def _fetch_url(url: str):
-        ua = {"User-Agent": UserAgent().random}
-        response = requests.get(url, headers=ua, timeout=TIMEOUT)
+        # ua = {"User-Agent": UserAgent().random}
+        # response = requests.get(url, headers=ua, timeout=TIMEOUT)
+
+        scraper = cloudscraper.create_scraper()
+        response = scraper.get(url, timeout=TIMEOUT)
 
         try:
             response.raise_for_status()

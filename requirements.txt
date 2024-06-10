@@ -1,3 +1,4 @@
 requests~=2.32.3
 fake-useragent
 defusedxml~=0.7.1
+cloudscraper
