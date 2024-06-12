@@ -59,33 +59,6 @@ class TestSitemapGrabber(unittest.TestCase):
         self.assertFalse(SitemapGrabber._is_sitemap(None))
 
     @responses.activate
-    def test_fetch_url(self):
-        responses.add(
-            responses.GET,
-            "https://example.com/sitemap.xml",
-            body="""<?xml version="1.0"?>""",
-        )
-
-        sitemap_grabber = SitemapGrabber("https://example.com")
-        self.assertEqual(
-            sitemap_grabber._fetch_url("https://example.com/sitemap.xml"),
-            """<?xml version="1.0"?>""",
-        )
-
-    @responses.activate
-    def test_fetch_url_bad_response(self):
-        responses.add(
-            responses.GET,
-            "https://example.com/sitemap.xml",
-            status=404,
-        )
-
-        sitemap_grabber = SitemapGrabber("https://example.com")
-        self.assertFalse(
-            sitemap_grabber._fetch_url("https://example.com/sitemap.xml")
-        )
-
-    @responses.activate
     def test_check_common_sitemap_locations(self):
         website = "https://example.com"
         for url in SitemapGrabber.COMMON_SITEMAP_LOCATIONS:

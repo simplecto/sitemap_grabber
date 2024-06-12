@@ -2,12 +2,41 @@ import logging
 from urllib.parse import urlparse
 
 import requests
-import cloudscraper
 from fake_useragent import UserAgent
 
 logger = logging.getLogger(__name__)
 
 TIMEOUT = 30
+
+HEADERS = {
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,"
+    "image/webp,*/*;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+}
+
+
+def get_url(url: str) -> str:
+    """
+    Fetches the specified URL. Returns the response text or an empty string.
+    Looks like a browser base on its headers.
+    :param url:
+    :return:
+    """
+    data = ""  # default return value
+    logger.debug("Fetching: %s", url)
+    HEADERS["User-Agent"] = UserAgent().random
+    try:
+        response = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
+        response.raise_for_status()
+        data = response.text
+    except requests.HTTPError as e:
+        logger.debug("Error fetching: %s", url)
+        logger.debug("Response: %s", e)
+
+    return data
 
 
 class WellKnownFilesException(Exception):
@@ -26,6 +55,8 @@ class WellKnownFiles(object):
         "security.txt": ["/security.txt", "/.well-known/security.txt"],
     }
 
+    # Make the headers look more like an actual browser
+
     def __init__(self, website_url: str = None):
         if not website_url or not website_url.startswith("http"):
             raise WellKnownFilesException(
@@ -34,10 +65,6 @@ class WellKnownFiles(object):
 
         domain = urlparse(website_url.lower()).netloc
         self.website_url = f"https://{domain}"
-
-        self.request_headers = {
-            "User-Agent": UserAgent().random,
-        }
 
         self.cache = {}
 
@@ -52,28 +79,6 @@ class WellKnownFiles(object):
         """
         return "<html" in response or "<body" in response
 
-    def _get_response(self, url):
-        try:
-            logger.debug("Fetching: %s", url)
-            # response = requests.get(
-            #     url, headers=self.request_headers, timeout=TIMEOUT
-            # )
-
-            scraper = cloudscraper.create_scraper()
-            response = scraper.get(url, timeout=TIMEOUT)
-
-            response.raise_for_status()
-        except requests.HTTPError as e:
-            logger.error("Error fetching: %s", url)
-            logger.error("Response: %s", e)
-            return ""
-
-        if self._is_html(response.text):
-            logger.info("Response is HTML, skipping %s", url)
-            return ""
-
-        return response.text
-
     def fetch(self, file_name: str) -> str:
         """
         Fetches the specified file from the website
@@ -85,7 +90,11 @@ class WellKnownFiles(object):
 
         for path in self.FILES[file_name]:
             file_url = f"{self.website_url}{path}"
-            response = self._get_response(file_url)
+            response = get_url(file_url)
+
+            if self._is_html(response):
+                logger.info("Response is HTML, skipping %s", file_url)
+                continue
 
             if response:
                 self.cache[file_name] = response

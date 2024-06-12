@@ -3,11 +3,9 @@ import logging
 import re
 import xml.etree.ElementTree  # nosec B405
 
-import requests
-import cloudscraper
 from defusedxml.ElementTree import fromstring
 from urllib.parse import urljoin
-from .well_known_files import WellKnownFiles
+from .well_known_files import WellKnownFiles, get_url
 
 
 logger = logging.getLogger(__name__)
@@ -62,27 +60,10 @@ class SitemapGrabber(object):
         logger.info("Trying default sitemap locations:")
         for location in self.COMMON_SITEMAP_LOCATIONS:
             url = urljoin(self.website_url, location)
-            content = self._fetch_url(url)
+            content = get_url(url)
 
             if self._is_sitemap(content):
                 self.sitemap_urls.append(url)
-
-    @staticmethod
-    def _fetch_url(url: str):
-        # ua = {"User-Agent": UserAgent().random}
-        # response = requests.get(url, headers=ua, timeout=TIMEOUT)
-
-        scraper = cloudscraper.create_scraper()
-        response = scraper.get(url, timeout=TIMEOUT)
-
-        try:
-            response.raise_for_status()
-        except requests.HTTPError as e:
-            logger.debug("Error fetching: %s", url)
-            logger.debug("Response: %s", e)
-            return False
-
-        return response.content.decode("utf-8")
 
     @staticmethod
     def _is_sitemap(content: str = None) -> bool:
@@ -139,7 +120,7 @@ class SitemapGrabber(object):
 
         logging.debug("Getting sitemap: %s", sitemap_url)
 
-        content = self._fetch_url(sitemap_url)
+        content = get_url(sitemap_url)
 
         # check if it is a sitemap
         if not self._is_sitemap(content):

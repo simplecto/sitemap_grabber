@@ -6,14 +6,14 @@ build-backend = "flit_core.buildapi"
 name = "sitemap_grabber"
 authors = [{name = "SimpleCTO", email = "github+sitemap_grabber@simplecto.com"}]
 license = {file = "LICENSE"}
-version = "0.1.5"
+version = "0.1.6"
 description = "A simple sitemap grabber"
 classifiers = ["License :: OSI Approved :: MIT License"]
 dependencies = [
   "requests",
   "fake-useragent",
   "defusedxml",
-  "cloudscraper"
+  "brotli"
 ]
 
 [project.urls]
