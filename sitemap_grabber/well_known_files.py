@@ -1,7 +1,8 @@
 import logging
 from urllib.parse import urlparse
 
-import requests
+from curl_cffi import requests
+from curl_cffi.requests.exceptions import RequestsError
 from fake_useragent import UserAgent
 
 logger = logging.getLogger(__name__)
@@ -29,10 +30,10 @@ def get_url(url: str) -> str:
     logger.debug("Fetching: %s", url)
     HEADERS["User-Agent"] = UserAgent().random
     try:
-        response = requests.get(url, headers=HEADERS, timeout=TIMEOUT)
+        response = requests.get(url, impersonate="chrome110", timeout=TIMEOUT)
         response.raise_for_status()
         data = response.text
-    except requests.HTTPError as e:
+    except RequestsError as e:
         logger.warning("Error fetching: %s", url)
         logger.warning("Response: %s", e)
 
