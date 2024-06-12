@@ -33,8 +33,8 @@ def get_url(url: str) -> str:
         response.raise_for_status()
         data = response.text
     except requests.HTTPError as e:
-        logger.debug("Error fetching: %s", url)
-        logger.debug("Response: %s", e)
+        logger.warning("Error fetching: %s", url)
+        logger.warning("Response: %s", e)
 
     return data
 
@@ -93,7 +93,7 @@ class WellKnownFiles(object):
             response = get_url(file_url)
 
             if self._is_html(response):
-                logger.info("Response is HTML, skipping %s", file_url)
+                logger.warning("Response is HTML, skipping %s", file_url)
                 continue
 
             if response:
