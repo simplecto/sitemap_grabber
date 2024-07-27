@@ -1,5 +1,5 @@
 black
 ruff
-pre-commit
+pre-commit==3.7.1
 flit
-responses
+responses==0.25.0

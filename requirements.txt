@@ -1,5 +1,5 @@
 requests~=2.32.3
-fake-useragent
+fake-useragent==1.5.1
 defusedxml~=0.7.1
-brotli
-curl_cffi
+brotli==1.1.0
+curl_cffi==0.7.1
