@@ -26,10 +26,15 @@ class SitemapGrabber(object):
         self.website_url = self.well_known_files.website_url
         self.blacklist_patterns = blacklist_patterns
 
-        self.sitemaps_crawled = set()
+        self.sitemaps_crawled = set()  # set of sitemaps already crawled
         self.sitemap_urls = []
 
     def _add_sitemap(self, url: str):
+        """
+        Add a sitemap to the list of sitemaps we have crawled/seen.
+        :param url:
+        :return:
+        """
         if url.lower() not in self.sitemaps_crawled:
             self.sitemap_urls.append(url)
 
@@ -99,6 +104,12 @@ class SitemapGrabber(object):
     def _process_sitemap_content(
         content: str,
     ) -> xml.etree.ElementTree.Element:
+        """
+        Process the sitemap content, receiving a string and returning an
+        ElementTree
+        :param content:
+        :return:
+        """
         try:
             root = fromstring(content)
         except xml.etree.ElementTree.ParseError as e:
