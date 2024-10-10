@@ -39,7 +39,6 @@ ignore = [
 ]
 select = ["ALL", "W2", "I", "B"]
 exclude = [
-    "pyproject.toml",
     "tests/*",
     ".idea/**",
 ]
