@@ -1,5 +1,4 @@
-black
-ruff
-pre-commit==3.7.1
-flit
+ruff==0.6.9
+pre-commit==4.0.1
+flit==3.9.0
 responses==0.25.0
