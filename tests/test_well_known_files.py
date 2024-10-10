@@ -1,4 +1,3 @@
-import responses
 from sitemap_grabber.well_known_files import (
     WellKnownFiles,
     WellKnownFilesError,
