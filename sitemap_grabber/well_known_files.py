@@ -2,20 +2,11 @@ import logging
 from urllib.parse import urlparse
 
 from curl_cffi import requests
-from curl_cffi.requests.exceptions import RequestsError
-from fake_useragent import UserAgent
+from curl_cffi.requests.exceptions import RequestException
 
 logger = logging.getLogger(__name__)
 
 TIMEOUT = 30
-
-HEADERS = {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Accept-Language": "en-US,en;q=0.5",
-    "Connection": "keep-alive",
-    "Upgrade-Insecure-Requests": "1",
-}
 
 
 def get_url(url: str) -> str:
@@ -28,12 +19,12 @@ def get_url(url: str) -> str:
     """
     data = ""  # default return value
     logger.debug("Fetching: %s", url)
-    HEADERS["User-Agent"] = UserAgent().random
+
     try:
         response = requests.get(url, impersonate="chrome110", timeout=TIMEOUT)
         response.raise_for_status()
         data = response.text
-    except RequestsError as e:
+    except RequestException as e:
         logger.warning("Error fetching: %s", url)
         logger.warning("Response: %s", e)
 
@@ -52,8 +43,6 @@ class WellKnownFiles:
         "humans.txt": ["/humans.txt"],
         "security.txt": ["/security.txt", "/.well-known/security.txt"],
     }
-
-    # Make the headers look more like an actual browser
 
     def __init__(self, website_url: str = "") -> None:
         """Initialize the WellKnownFiles class.

@@ -6,7 +6,7 @@ from xml.etree.ElementTree import Element, ParseError
 
 from defusedxml.ElementTree import fromstring
 
-from .well_known_files import WellKnownFiles, get_url
+from sitemap_grabber.well_known_files import WellKnownFiles, get_url
 
 logger = logging.getLogger(__name__)
 
