@@ -10,8 +10,7 @@ logger = logging.getLogger(__name__)
 TIMEOUT = 30
 
 HEADERS = {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,"
-    "image/webp,*/*;q=0.8",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
     "Accept-Encoding": "gzip, deflate, br",
     "Accept-Language": "en-US,en;q=0.5",
     "Connection": "keep-alive",
@@ -20,9 +19,10 @@ HEADERS = {
 
 
 def get_url(url: str) -> str:
-    """
-    Fetches the specified URL. Returns the response text or an empty string.
-    Looks like a browser base on its headers.
+    """Fetch the specified URL.
+
+    Return the response text or an empty string. Looks like a browser base on
+    its headers.
     :param url:
     :return:
     """
@@ -40,17 +40,14 @@ def get_url(url: str) -> str:
     return data
 
 
-class WellKnownFilesException(Exception):
-    pass
+class WellKnownFilesError(Exception):
+    """Base exception for WellKnownFiles."""
 
 
-class WellKnownFiles(object):
-    """
-    This class is for fetching the well-known files from a website
-    (e.g. robots.txt, humans.txt, security.txt)
-    """
+class WellKnownFiles:
+    """Fetch the well-known files from a website (e.g. robots.txt, humans.txt, security.txt)."""
 
-    FILES = {
+    FILES = {  # noqa: RUF012
         "robots.txt": ["/robots.txt"],
         "humans.txt": ["/humans.txt"],
         "security.txt": ["/security.txt", "/.well-known/security.txt"],
@@ -58,11 +55,15 @@ class WellKnownFiles(object):
 
     # Make the headers look more like an actual browser
 
-    def __init__(self, website_url: str = None):
-        if not website_url or not website_url.startswith("http"):
-            raise WellKnownFilesException(
-                "website_url is required (eg. https://example.com)"
-            )
+    def __init__(self, website_url: str = "") -> None:
+        """Initialize the WellKnownFiles class.
+
+        :param website_url:
+
+        """
+        if website_url == "" or not website_url.startswith("http"):
+            msg = "website_url is required (eg. https://example.com)"
+            raise WellKnownFilesError(msg)
 
         domain = urlparse(website_url.lower()).netloc
         self.website_url = f"https://{domain}"
@@ -70,19 +71,19 @@ class WellKnownFiles(object):
         self.cache = {}
 
     @staticmethod
-    def _is_html(response):
-        """
-            test if the returned content is detected as HTML (which means it
-            is not a valid response)
-            it should look for "<html" or "<body" in the response
+    def _is_html(response: str) -> bool:
+        """Test if the returned content is detected as HTML (which means it is not a valid response).
+
+            It should look for "<html" or "<body" in the response.
+
         :param response:
         :return:
         """
         return "<html" in response or "<body" in response
 
     def fetch(self, file_name: str) -> str:
-        """
-        Fetches the specified file from the website
+        """Fetch the specified file from the website.
+
         :param file_name: The name of the file to fetch
         :return: The contents of the file
         """
