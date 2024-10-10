@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from well_known_files import get_url
+from sitemap_grabber.well_known_files import get_url
 
 
 class TestGetUrl(unittest.TestCase):
