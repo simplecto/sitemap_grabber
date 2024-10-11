@@ -7,4 +7,4 @@ help:
 .PHONY: test
 test:
 	@echo "Running tests..."
-	python -m unittest discover tests/
+	source .venv/bin/activate && python -m unittest discover tests/

@@ -7,6 +7,7 @@ from curl_cffi.requests.exceptions import RequestException
 logger = logging.getLogger(__name__)
 
 TIMEOUT = 30
+HTTP_200 = 200
 
 
 def get_url(url: str) -> str:
@@ -22,8 +23,7 @@ def get_url(url: str) -> str:
 
     try:
         response = requests.get(url, impersonate="chrome110", timeout=TIMEOUT)
-        response.raise_for_status()
-        data = response.text
+        data = response.text if response.status_code == HTTP_200 else ""
     except RequestException as e:
         logger.warning("Error fetching: %s", url)
         logger.warning("Response: %s", e)
@@ -83,8 +83,8 @@ class WellKnownFiles:
             file_url = f"{self.website_url}{path}"
             response = get_url(file_url)
 
-            if self._is_html(response):
-                logger.warning("Response is HTML, skipping %s", file_url)
+            if self._is_html(response) or response == "":
+                logger.warning("Response is HTML or empty, skipping %s", file_url)
                 continue
 
             if response:
@@ -92,3 +92,14 @@ class WellKnownFiles:
                 return response
 
         return ""
+
+    def fetch_all(self) -> dict:
+        """Fetch all the well-known files.
+
+        :return: A dictionary of the files and their contents
+        """
+        return {
+            "robots.txt": self.fetch("robots.txt"),
+            "humans.txt": self.fetch("humans.txt"),
+            "security.txt": self.fetch("security.txt"),
+        }

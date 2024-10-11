@@ -79,3 +79,53 @@ class TestWellKnownFiles(unittest.TestCase):
 
         well_known_files = WellKnownFiles("https://example.com/en")
         self.assertEqual(well_known_files.website_url, "https://example.com")
+
+    @patch("curl_cffi.requests.get")
+    def test_fetch_all(self, mock_get):
+        def side_effect(url, *args, **kwargs):
+            if url == "https://example.com/robots.txt":
+                return MagicMock(status_code=200, text="User-agent: *\nDisallow: /")
+            elif url == "https://example.com/humans.txt":
+                return MagicMock(status_code=200, text="Humans: Me")
+            elif url == "https://example.com/security.txt":
+                return MagicMock(status_code=404, text="Not Found")
+            elif url == "https://example.com/.well-known/security.txt":
+                return MagicMock(status_code=200, text="Contact:")
+            return MagicMock(status_code=404, text="Not Found")
+
+        mock_get.side_effect = side_effect
+
+        expected_result = {
+            "robots.txt": "User-agent: *\nDisallow: /",
+            "humans.txt": "Humans: Me",
+            "security.txt": "Contact:",
+        }
+
+        result = self.well_known_files.fetch_all()
+        print(result)
+        self.assertDictEqual(result, expected_result)
+
+    @patch("curl_cffi.requests.get")
+    def test_fetch_all_missing(self, mock_get):
+        def side_effect(url, *args, **kwargs):
+            if url == "https://example.com/robots.txt":
+                return MagicMock(status_code=404, text="Not found")
+            elif url == "https://example.com/humans.txt":
+                return MagicMock(status_code=404, text="Not found")
+            elif url == "https://example.com/security.txt":
+                return MagicMock(status_code=404, text="Not Found")
+            elif url == "https://example.com/.well-known/security.txt":
+                return MagicMock(status_code=500, text="Not Found")
+            return MagicMock(status_code=404, text="Not Found")
+
+        mock_get.side_effect = side_effect
+
+        expected_result = {
+            "robots.txt": "",
+            "humans.txt": "",
+            "security.txt": "",
+        }
+
+        result = self.well_known_files.fetch_all()
+        print(result)
+        self.assertDictEqual(result, expected_result)
