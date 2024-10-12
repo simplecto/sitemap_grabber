@@ -19,3 +19,11 @@ repos:
     # Run the formatter.
     - id: ruff-format
       exclude: ruff.xml
+
+
+- repo: https://github.com/commitizen-tools/commitizen
+  rev: v3.29.1
+  hooks:
+    - id: commitizen
+    - id: commitizen-branch
+      stages: [push]
