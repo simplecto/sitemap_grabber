@@ -6,7 +6,7 @@ build-backend = "flit_core.buildapi"
 name = "sitemap_grabber"
 authors = [{name = "SimpleCTO", email = "github+sitemap_grabber@simplecto.com"}]
 license = {file = "LICENSE"}
-version = "0.1.12"
+version = "1.0.0"
 description = "Grab and recursively parse website sitemaps, robots.txt, and other related files."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -79,5 +79,5 @@ update_changelog_on_bump = true
 changelog_file = "CHANGELOG.md"
 changelog_incremental = true
 version_files = [
-    "pyproject.toml:version",
+    "pyproject.toml:^version",
 ]
