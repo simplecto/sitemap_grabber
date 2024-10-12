@@ -1,3 +1,5 @@
+import json
+
 from sitemap_grabber.well_known_files import (
     WellKnownFiles,
     WellKnownFilesError,
@@ -15,40 +17,48 @@ class TestWellKnownFiles(unittest.TestCase):
         self.robots_txt = "User-agent: *\nDisallow: /"
         self.humans_txt = "Humans: Me"
         self.security_txt = "Contact:"
+        self.assetlinks_json = {"example": ["output"]}
+        self.change_password = "https://example.com/new-location"
         self.html_response = "<html><body>"
 
     @patch("curl_cffi.requests.get")
-    def test_fetch_robots_txt(self, mock_get):
+    def test_fetch_txt(self, mock_get):
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.text = "User-agent: *\nDisallow: /"
         mock_get.return_value = mock_response
 
-        robots_txt = self.well_known_files.fetch("robots.txt")
-        self.assertEqual(robots_txt, "User-agent: *\nDisallow: /")
+        self.assertEqual(self.well_known_files.robots_txt, "User-agent: *\nDisallow: /")
 
     @patch("curl_cffi.requests.get")
-    def test_fetch_humans_txt(self, mock_get):
+    def test_fetch_txt_404(self, mock_get):
         mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.text = "Humans: Me"
+        mock_response.status_code = 404
+        mock_response.text = "Not Found"
         mock_get.return_value = mock_response
 
-        humans_txt = self.well_known_files.fetch("humans.txt")
-        self.assertEqual(humans_txt, "Humans: Me")
+        self.assertEqual(self.well_known_files.robots_txt, "")
 
     @patch("curl_cffi.requests.get")
-    def test_fetch_security_txt(self, mock_get):
+    def test_fetch_json(self, mock_get):
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.text = "Contact:"
+        mock_response.text = json.dumps(self.assetlinks_json)
         mock_get.return_value = mock_response
 
-        security_txt = self.well_known_files.fetch("security.txt")
-        self.assertEqual(security_txt, "Contact:")
+        self.assertEqual(self.well_known_files.assetlinks_json, self.assetlinks_json)
 
     @patch("curl_cffi.requests.get")
-    def test_fetch_security_txt_well_known(self, mock_get):
+    def test_fetch_json_404(self, mock_get):
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        mock_response.text = "Not Found"
+        mock_get.return_value = mock_response
+
+        self.assertEqual(self.well_known_files.assetlinks_json, {})
+
+    @patch("curl_cffi.requests.get")
+    def test_security_txt_well_known(self, mock_get):
         def side_effect(url, *args, **kwargs):
             if url == "https://example.com/security.txt":
                 return MagicMock(status_code=200, text=self.html_response)
@@ -58,8 +68,7 @@ class TestWellKnownFiles(unittest.TestCase):
 
         mock_get.side_effect = side_effect
 
-        security_txt = self.well_known_files.fetch("security.txt")
-        self.assertEqual("Contact:", security_txt)
+        self.assertEqual("Contact:", self.well_known_files.security_txt)
 
     # test that website_url does not have http or end with /
     def test_website_url(self):
@@ -91,6 +100,11 @@ class TestWellKnownFiles(unittest.TestCase):
                 return MagicMock(status_code=404, text="Not Found")
             elif url == "https://example.com/.well-known/security.txt":
                 return MagicMock(status_code=200, text="Contact:")
+            elif url == "https://example.com/.well-known/assetlinks.json":
+                return MagicMock(status_code=200, text=json.dumps(self.assetlinks_json))
+            elif url == "https://example.com/.well-known/change-password":
+                return MagicMock(status_code=302, headers={"Location": "https://example.com/new-location"})
+
             return MagicMock(status_code=404, text="Not Found")
 
         mock_get.side_effect = side_effect
@@ -99,33 +113,27 @@ class TestWellKnownFiles(unittest.TestCase):
             "robots.txt": "User-agent: *\nDisallow: /",
             "humans.txt": "Humans: Me",
             "security.txt": "Contact:",
+            "assetlinks.json": self.assetlinks_json,
+            "change-password": "https://example.com/new-location",
         }
 
         result = self.well_known_files.fetch_all()
-        print(result)
         self.assertDictEqual(result, expected_result)
 
     @patch("curl_cffi.requests.get")
-    def test_fetch_all_missing(self, mock_get):
-        def side_effect(url, *args, **kwargs):
-            if url == "https://example.com/robots.txt":
-                return MagicMock(status_code=404, text="Not found")
-            elif url == "https://example.com/humans.txt":
-                return MagicMock(status_code=404, text="Not found")
-            elif url == "https://example.com/security.txt":
-                return MagicMock(status_code=404, text="Not Found")
-            elif url == "https://example.com/.well-known/security.txt":
-                return MagicMock(status_code=500, text="Not Found")
-            return MagicMock(status_code=404, text="Not Found")
+    def test_change_password(self, mock_get):
+        mock_response = MagicMock()
+        mock_response.status_code = 302
+        mock_response.headers = {"Location": "https://example.com/new-location"}
+        mock_get.return_value = mock_response
 
-        mock_get.side_effect = side_effect
+        self.assertEqual(mock_response.headers["Location"], self.well_known_files.change_password)
 
-        expected_result = {
-            "robots.txt": "",
-            "humans.txt": "",
-            "security.txt": "",
-        }
+    @patch("curl_cffi.requests.get")
+    def test_change_password_404(self, mock_get):
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        mock_response.text = "Not Found"
+        mock_get.return_value = mock_response
 
-        result = self.well_known_files.fetch_all()
-        print(result)
-        self.assertDictEqual(result, expected_result)
+        self.assertEqual("", self.well_known_files.change_password)

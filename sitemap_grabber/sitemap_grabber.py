@@ -52,7 +52,7 @@ class SitemapGrabber:
 
         :return:
         """
-        robots_txt = self.well_known_files.fetch("robots.txt")
+        robots_txt = self.well_known_files.robots_txt
 
         for line in robots_txt.split("\n"):
             # regex case-insensitive match
