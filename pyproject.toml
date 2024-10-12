@@ -73,7 +73,7 @@ exclude = [
 [tool.commitizen]
 name = "cz_conventional_commits"
 version = "0.1.12"
-tag_format = "v$version"
+tag_format = "$version"
 bump_message = "bump: version $current_version → $new_version"
 update_changelog_on_bump = true
 changelog_file = "CHANGELOG.md"
