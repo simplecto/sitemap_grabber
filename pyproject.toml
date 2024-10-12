@@ -7,16 +7,45 @@ name = "sitemap_grabber"
 authors = [{name = "SimpleCTO", email = "github+sitemap_grabber@simplecto.com"}]
 license = {file = "LICENSE"}
 version = "0.1.12"
-description = "A simple sitemap grabber"
-classifiers = ["License :: OSI Approved :: MIT License"]
+description = "Grab and recursively parse website sitemaps, robots.txt, and other related files."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+]
 dependencies = [
-  "defusedxml == 0.7.1",
-  "brotli == 1.1.0",
-  "curl_cffi == 0.7.3"
+    "defusedxml==0.7.1",
+    "brotli==1.1.0",
+    "curl_cffi==0.7.3"
+]
+
+[project.optional-dependencies]
+docs = [
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocstrings[python]",
+]
+
+dev = [
+    "ruff==0.6.9",
+    "pre-commit==4.0.1",
+    "flit==3.9.0",
 ]
 
 [project.urls]
 Home = "https://github.com/simplecto/sitemap_grabber"
+Documentation = "https://github.com/simplecto/sitemap_grabber#readme"
+Source = "https://github.com/simplecto/sitemap_grabber"
+Issues = "https://github.com/simplecto/sitemap_grabber/issues"
 
 [tool.ruff]
 line-length = 120

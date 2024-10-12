@@ -1,6 +1,33 @@
-venv/
 .venv/
-__pycache__/
-*.pyc
-dist/
 tests/playground.py
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environment
+venv/
+.env
+
+# MkDocs documentation
+site/
+
+# IDEs
+.vscode/

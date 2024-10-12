@@ -19,6 +19,8 @@ A Python-based utility suite designed to fetch and analyze sitemaps and other we
 - Robust error handling and logging
 - User-agent spoofing for web requests
 
+---
+
 ## Installation
 
 1. Clone the repository:
