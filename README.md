@@ -34,6 +34,38 @@ A Python-based utility suite designed to fetch and analyze sitemaps and other we
    pip install -r requirements.txt
    ```
 
+### Installation with documentation dependencies
+
+To install Sitemap Grabber with documentation dependencies:
+
+1. Ensure you have flit installed:
+   ```
+   pip install flit
+   ```
+
+2. Install the package with documentation dependencies:
+   ```
+   flit install --deps develop --extras docs
+   ```
+
+For developers who want to contribute to the project:
+
+1. Install the package with both documentation and development dependencies:
+   ```
+   flit install --deps develop --extras "docs,dev"
+   ```
+
+Alternatively, if you prefer using pip:
+
+```
+pip install -e ".[docs,dev]"
+```
+
+This will install the package in editable mode along with all necessary
+dependencies for building the documentation and development tools.
+
+---
+
 ## Usage
 
 Here's a basic example of how to use the SitemapGrabber:
