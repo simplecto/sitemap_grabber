@@ -1,8 +1,8 @@
-import html
 import logging
 import re
 from urllib.parse import urljoin
 from xml.etree.ElementTree import Element, ParseError
+from xml.parsers.expat import ExpatError
 
 from defusedxml.ElementTree import fromstring
 
@@ -11,6 +11,10 @@ from sitemap_grabber.well_known_files import WellKnownFiles, get_url
 logger = logging.getLogger(__name__)
 
 TIMEOUT = 30
+
+
+class SitemapGrabberError(Exception):
+    """Base exception for SitemapGrabber."""
 
 
 class SitemapGrabber:
@@ -105,19 +109,21 @@ class SitemapGrabber:
 
     @staticmethod
     def _process_sitemap_content(content: str) -> Element:
-        """Process the sitemap content, receiving a string and returning an ElementTree.
+        """Process the sitemap content.
 
         :param content:
         :return:
         """
-        try:
-            root = fromstring(content)
-        except ParseError:
-            logger.exception("Error parsing sitemap")
-            unescaped_content = html.unescape(content)
-            root = fromstring(unescaped_content)
 
-        return root
+        def encode_ampersands(text: str) -> str:
+            return re.sub(r"&(?!amp;|lt;|gt;|apos;|quot;)", "&amp;", text)
+
+        encoded_content = encode_ampersands(content)
+        try:
+            return fromstring(encoded_content)
+        except (ParseError, ExpatError) as e:
+            msg = f"Failed to parse sitemap content: {type(e).__name__}"
+            raise SitemapGrabberError(msg) from e
 
     def _recursive_get_sitemaps(self, sitemap_url: str) -> None:
         """Given a list of sitemap URLs, get all sitemaps recursively.

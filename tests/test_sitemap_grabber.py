@@ -1,7 +1,8 @@
 import unittest
 from unittest.mock import patch, MagicMock
+from xml.etree.ElementTree import Element
 
-from sitemap_grabber.sitemap_grabber import SitemapGrabber
+from sitemap_grabber.sitemap_grabber import SitemapGrabber, SitemapGrabberError
 
 
 class TestSitemapGrabber(unittest.TestCase):
@@ -32,15 +33,13 @@ class TestSitemapGrabber(unittest.TestCase):
         """Handle case when there is a bad html entity in the <loc>. Coinbase
         is the offender here."""
 
+        # the <loc> tag has an unescaped ampersand
         body = """<?xml version="1.0"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-<url><loc>https://www.coinbase.com/converter/cassie&#128009/aed</loc></url>
-</urlset>"""
+<url><loc>https://www.bibox.com/en/seo/center/list/19?classId=25&page=1</loc></url></urlset>"""
 
-        with self.assertLogs("sitemap_grabber", "ERROR") as cm:
-            SitemapGrabber._process_sitemap_content(body)
-
-        self.assertIn("Error parsing sitemap", cm.output[0])
+        result = SitemapGrabber._process_sitemap_content(body)
+        self.assertTrue(isinstance(result, Element))
 
     def test_is_sitemap_with_good_sitemap(self):
         body = """<?xml version="1.0"?>
@@ -174,3 +173,9 @@ class TestSitemapGrabber(unittest.TestCase):
         ]
         actual_calls = [call.args[0] for call in mock_get.call_args_list]
         self.assertEqual(set(actual_calls), set(expected_calls))
+
+    def test_process_sitemap_content_raises_error(self):
+        invalid_content = "<invalid>xml<unclosed>"
+
+        with self.assertRaises(SitemapGrabberError) as cm:
+            SitemapGrabber._process_sitemap_content(invalid_content)
