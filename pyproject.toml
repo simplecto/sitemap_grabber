@@ -6,7 +6,7 @@ build-backend = "flit_core.buildapi"
 name = "sitemap_grabber"
 authors = [{name = "SimpleCTO", email = "github+sitemap_grabber@simplecto.com"}]
 license = {file = "LICENSE"}
-version = "1.0.1"
+version = "2.0.0"
 description = "Grab and recursively parse website sitemaps, robots.txt, and other related files."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -72,7 +72,7 @@ exclude = [
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "1.0.1"
+version = "2.0.0"
 tag_format = "$version"
 bump_message = "bump: version $current_version → $new_version"
 update_changelog_on_bump = true
